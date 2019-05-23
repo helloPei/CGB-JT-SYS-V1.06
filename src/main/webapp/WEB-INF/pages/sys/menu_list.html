@@ -1,0 +1,199 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<h3 class="box-title">菜单管理</h3>
+
+				<div class="box-tools">
+					<div class="input-group input-group-sm" style="width: 100px;">
+						<div class="input-group-btn">
+						
+							<button type="button" 
+							class="btn btn-default btn-delete">删除</button>
+							<button type="button" class="btn btn-default btn-add">添加</button>
+							<button type="button" class="btn btn-default btn-update">修改</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /.box-header -->
+		<div class="box-body table-responsive no-padding">
+          <table id="menuTable" class="table table-hover">
+        	<thead>
+	        <tr>
+		      <th data-field="selectItem" data-checkbox="true"></th>
+	        </tr>
+	       </thead>
+	       
+         </table>
+        </div>
+		</div>
+		<!-- /.box -->
+	</div>
+</div>
+<script type="text/javascript" src="bower_components/treegrid/jquery.treegrid.extension.js"></script>
+<script type="text/javascript" src="bower_components/treegrid/jquery.treegrid.min.js"></script>
+<script type="text/javascript" src="bower_components/treegrid/tree.table.js"></script>
+<script type="text/javascript">
+/**
+ * 初始化表格的列
+ */
+var columns = [
+{
+	field : 'selectItem',
+	radio : true
+},
+{
+	title : '菜单ID',
+	field : 'id',
+	visible : false,
+	align : 'center',
+	valign : 'middle',
+	width : '80px'
+},
+{
+	title : '菜单名称',
+	field : 'name',
+	align : 'center',
+	valign : 'middle',
+	sortable : true,
+	width : '130px'
+},
+{
+	title : '上级菜单',
+	field : 'parentName',
+	align : 'center',
+	valign : 'middle',
+	sortable : true,
+	width : '100px'
+},
+{
+	title : '类型',
+	field : 'type',
+	align : 'center',
+	valign : 'middle',
+	sortable : true,
+	width : '70px',
+	formatter : function(item, index) {
+		if (item.type == 1) {
+			return '<span class="label label-success">菜单</span>';
+		}
+		if (item.type == 2) {
+			return '<span class="label label-warning">按钮</span>';
+		}
+	}
+}, 
+{
+	title : '排序号',
+	field : 'sort',
+	align : 'center',
+	valign : 'middle',
+	sortable : true,
+	width : '70px'
+}, 
+{
+	title : '菜单URL',
+	field : 'url',
+	align : 'center',
+	valign : 'middle',
+	sortable : true,
+	width : '160px'
+}, 
+{
+	title : '授权标识',
+	field : 'permission',
+	align : 'center',
+	valign : 'middle',
+	sortable : true
+} ];//格式来自官方demos -->treeGrid(jquery扩展的一个网格树插件)
+
+//$(function(){});
+$(document).ready(function(){
+	 $(".input-group-btn")
+	 .on("click",'.btn-delete',doDeleteObject)
+	 .on("click",".btn-add,.btn-update",doLoadEditUI)
+	 
+	 doGetObjects();
+});
+function doLoadEditUI(){
+	var title;
+	if($(this).hasClass("btn-add")){
+		title="添加菜单"
+	}else if($(this).hasClass("btn-update")){
+		title="修改菜单"
+		//获取当前行记录
+		var rowData=doGetCheckedItem();
+		//将记录绑定#mainContentId对应的对象上
+	    $("#mainContentId").data("rowData",rowData);
+	}
+	var url="menu/doMenuEditUI.do";
+	$("#mainContentId").load(url,function(){
+		$(".box-title").html(title);
+	})
+};
+function doGetCheckedItem(){
+	var tr=
+	$("tbody input[type='radio']:checked")
+	.parents("tr");
+	var rowData=tr.data("rowData");
+	console.log(rowData);
+	return rowData;
+}
+
+
+
+function doDeleteObject(){
+	//1.获取选中的id
+	var id=doGetCheckedId();
+	if(!id){
+		alert("请先选择");
+		return;
+	}
+	//2.异步提交请求删除对象
+	var url="menu/doDeleteObject.do";
+	var params={"id":id};
+	$.post(url,params,function(result){
+		if(result.state==1){
+			alert(result.message);
+			doGetObjects();
+		}else{
+			alert(result.message);
+		}
+	})
+}
+
+function doGetCheckedId(){
+	//1.获取选中的记录,返回值为一个数组.
+	var selections=$("#menuTable")
+	//bootstrapTreeTable是treeGrid插件内部定义的jquery扩展函数
+	//getSelections为扩展函数内部要调用的一个方法
+	.bootstrapTreeTable("getSelections");
+	//2.对记录进行判定
+	if(selections.length==1)
+	return selections[0].id;
+}
+
+
+function doGetObjects(){
+	//1.构建treeTable对象
+	var treeTable=new TreeTable("menuTable",//tableId
+    		"menu/doFindObjects.do",//url
+    		 columns);
+	//2.设置treeTable(可选的)
+	//例如设置在第3列展开树结构
+	treeTable.setExpandColumn(2);
+	//3.发异步请求初始化table对象
+	treeTable.init();//底层ajax请求
+}
+
+
+</script>
+
+
+
+
+
+
+
+
+
